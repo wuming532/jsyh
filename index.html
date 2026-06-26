@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>中国建设银行 · 企业网上银行</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+      background: #E8ECF1; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+      padding: 16px;
+    }
+    /* 登录页 */
+    .login-container {
+      width: 100%; max-width: 420px; background: #fff; border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15); padding: 32px 24px; display: flex; flex-direction: column; align-items: center;
+    }
+    .login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .login-logo svg { width: 36px; height: 36px; }
+    .login-logo span { font-size: 20px; font-weight: 700; color: #0052A3; }
+    .login-title { font-size: 18px; font-weight: 600; color: #1A1C1E; margin-bottom: 24px; }
+    .input-group { width: 100%; margin-bottom: 16px; }
+    .input-group label { font-size: 13px; color: #5F6368; margin-bottom: 4px; display: block; }
+    .input-group input { width: 100%; padding: 12px 14px; border: 1.5px solid #DDE1E6; border-radius: 8px; font-size: 15px; outline: none; background: #FAFBFC; }
+    .input-group input:focus { border-color: #0066CC; }
+    .login-btn { width: 100%; padding: 14px; background: #0052A3; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+    .login-btn:hover { background: #0066CC; }
+    .error-msg { color: #D50000; font-size: 13px; margin-top: 8px; display: none; }
+    .error-msg.show { display: block; }
+    .secure-tip { margin-top: 16px; font-size: 12px; color: #9499A0; display: flex; align-items: center; gap: 6px; }
+
+    /* 主界面 */
+    .app-container {
+      width: 100%; max-width: 1400px; background: #fff; border-radius: 10px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.12); display: none; flex-direction: column; min-height: 92vh; overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #003D7A 0%, #0052A3 60%, #004B91 100%);
+      color: #fff; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo svg { width: 32px; height: 32px; fill: #fff; }
+    .bank-title { font-size: 18px; font-weight: 700; }
+    .bank-title span { font-size: 11px; font-weight: 400; opacity: 0.8; margin-left: 6px; }
+    .header-info { display: flex; align-items: center; gap: 18px; font-size: 13px; }
+    .company-badge { background: rgba(255,255,255,0.18); padding: 6px 14px; border-radius: 20px; font-weight: 600; }
+    .logout-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5); color: #fff; padding: 6px 18px; border-radius: 20px; cursor: pointer; }
+    .main-layout { display: flex; flex: 1; min-height: 0; }
+    .sidebar {
+      width: 220px; background: #F5F7FA; border-right: 1px solid #DDE1E6; padding: 8px 0;
+      display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
+    }
+    .menu-group { margin-bottom: 6px; }
+    .group-title { font-size: 11px; color: #5F6368; padding: 8px 20px 4px; font-weight: 600; text-transform: uppercase; }
+    .menu-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: #1A1C1E; text-decoration: none;
+      font-size: 13px; font-weight: 500; border-left: 3px solid transparent; cursor: pointer; transition: 0.2s;
+    }
+    .menu-item:hover { background: #EBF0F5; color: #0052A3; }
+    .menu-item.active { background: #E0EBF5; color: #0052A3; border-left-color: #0052A3; font-weight: 600; }
+    .content { flex: 1; padding: 16px 20px; overflow-y: auto; background: #FAFBFC; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .page-title { font-size: 18px; font-weight: 700; color: #1A1C1E; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #0052A3; }
+    .card {
+      background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      padding: 18px 20px; margin-bottom: 14px; border: 1px solid #DDE1E6;
+    }
+    .btn {
+      padding: 9px 22px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+      border: none; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; background: #0052A3; color: #fff;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-outline { background: #fff; color: #0052A3; border: 1.5px solid #0052A3; }
+    .btn-sm { padding: 5px 14px; font-size: 12px; }
+    .btn-gold { background: linear-gradient(135deg, #C8960C, #E0A800); }
+    .btn-danger { background: #D50000; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .form-group label { font-size: 13px; font-weight: 500; color: #1A1C1E; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 10px 12px; border: 1.5px solid #DDE1E6; border-radius: 6px; font-size: 14px; background: #FAFBFC; outline: none;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: #0052A3; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #F0F4F8; padding: 10px 12px; text-align: left; font-weight: 600; color: #5F6368; }
+    td { padding: 9px 12px; border-bottom: 1px solid #DDE1E6; }
+    .tabs { display: flex; gap: 0; margin-bottom: 14px; border-bottom: 2px solid #DDE1E6; }
+    .tab { padding: 10px 20px; cursor: pointer; font-weight: 500; font-size: 13px; color: #5F6368; border-bottom: 3px solid transparent; }
+    .tab.active { color: #0052A3; border-bottom-color: #0052A3; font-weight: 600; }
+    .highlight-num { font-size: 28px; font-weight: 700; color: #0052A3; }
+    .tag { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .tag-blue { background: #E3F2FD; color: #1565C0; }
+    .tag-green { background: #E8F5E9; color: #2E7D32; }
+    .ad-banner {
+      background: linear-gradient(135deg, #FFF8E1, #FFECB3); border-radius: 8px;
+      padding: 14px 16px; display: flex; align-items: center; gap: 14px; border: 1px solid #F5D77A; margin-bottom: 10px;
+    }
+    @media (max-width: 860px) {
+      .main-layout { flex-direction: column; }
+      .sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- 登录界面 -->
+<div id="loginPage" class="login-container">
+  <div class="login-logo">
+    <svg viewBox="0 0 24 24" fill="#0052A3">
+      <rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="#0052A3" stroke-width="2.5"/>
+      <line x1="8" y1="10" x2="16" y2="10" stroke="#0052A3" stroke-width="2"/>
+      <line x1="8" y1="14" x2="14" y2="14" stroke="#0052A3" stroke-width="2"/>
+    </svg>
+    <span>中国建设银行</span>
+  </div>
+  <div class="login-title">企业网上银行登录</div>
+  <div class="input-group">
+    <label>企业客户号 / 操作员代号</label>
+    <input type="text" id="loginAccount" placeholder="请输入账号" value="18170781811">
+  </div>
+  <div class="input-group">
+    <label>登录密码</label>
+    <input type="password" id="loginPassword" placeholder="请输入密码" value="20199900">
+  </div>
+  <button class="login-btn" id="loginBtn">登 录</button>
+  <div class="error-msg" id="loginError">账号或密码错误，请重新输入</div>
+  <div class="secure-tip">
+    <span style="color:#1B8C3C;">🔒 安全连接</span> | 客服热线 95533 | 建行企业银行
+  </div>
+</div>
+
+<!-- 主界面 -->
+<div id="mainPage" class="app-container">
+  <div class="header">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="#fff" stroke-width="2.5"/><line x1="8" y1="10" x2="16" y2="10" stroke="#fff" stroke-width="2"/></svg>
+      <div class="bank-title">中国建设银行<span>| 企业网上银行</span></div>
+    </div>
+    <div class="header-info">
+      <span>🔒 安全环境 | 95533</span>
+      <div class="company-badge">南康区云泽电脑科技中心</div>
+      <button class="logout-btn" id="logoutBtn">安全退出</button>
+    </div>
+  </div>
+  <div class="main-layout">
+    <div class="sidebar" id="sidebar">
+      <div class="menu-group">
+        <div class="group-title">账户管理</div>
+        <div class="menu-item active" data-view="home"><span>🏠</span>账户总览</div>
+        <div class="menu-item" data-view="transfer"><span>💸</span>转账汇款</div>
+        <div class="menu-item" data-view="voucher"><span>📄</span>电子回单</div>
+      </div>
+      <div class="menu-group">
+        <div class="group-title">融资信贷</div>
+        <div class="menu-item" data-view="loan"><span>🏦</span>贷款服务</div>
+        <div class="menu-item" data-view="finance"><span>📈</span>投资理财</div>
+        <div class="menu-item" data-view="precious"><span>🥇</span>贵金属外汇</div>
+      </div>
+      <div class="menu-group">
+        <div class="group-title">生活服务</div>
+        <div class="menu-item" data-view="payment"><span>💡</span>生活缴费</div>
+        <div class="menu-item" data-view="community"><span>👥</span>企业社区</div>
+        <div class="menu-item" data-view="ads"><span>📢</span>优惠推荐</div>
+      </div>
+    </div>
+    <div class="content" id="contentPanel"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // 登录验证
+  const validAccount = '18170781811';
+  const validPassword = '20199900';
+  const loginPage = document.getElementById('loginPage');
+  const mainPage = document.getElementById('mainPage');
+  const loginError = document.getElementById('loginError');
+
+  document.getElementById('loginBtn').addEventListener('click', () => {
+    if (document.getElementById('loginAccount').value.trim() === validAccount &&
+        document.getElementById('loginPassword').value === validPassword) {
+      loginPage.style.display = 'none';
+      mainPage.style.display = 'flex';
+      initApp();
+    } else {
+      loginError.classList.add('show');
+    }
+  });
+  document.getElementById('loginPassword').addEventListener('keypress', e => {
+    if (e.key === 'Enter') document.getElementById('loginBtn').click();
+  });
+  document.getElementById('loginAccount').addEventListener('input', () => loginError.classList.remove('show'));
+
+  // ---------- 全局数据 ----------
+  let balance = 331236.56;
+  const ACCOUNT = { name: '南康区云泽电脑科技中心(个体工商户)', number: '36050181015700002476' };
+  let transferHistory = [];
+  let payeeList = [{ name: '深圳科技有限公司', acc: '6227001234567890', bank: '工商银行', branch: '南山支行' }];
+  let templates = [];
+  let loanApplications = [];
+  let paymentHistory = [];
+  let financeHoldings = [];
+  let metalHoldings = [{ type: '黄金', grams: 10, cost: 545 }];
+  let currentTransferData = null;
+  let batchRows = [{ name: '', acc: '', bank: '', amount: 0 }];
+  let metalPrices = {
+    '黄金': { buy: 598.50, sell: 600.80, change: 0.42 },
+    '白银': { buy: 7.45, sell: 7.52, change: 0.05 },
+    '铂金': { buy: 225.30, sell: 226.90, change: -0.18 }
+  };
+
+  // 初始化默认数据
+  transferHistory.push({ id: 'TX20260625', time: '2026-06-25 14:30', payeeName: '深圳科技公司', payeeAcc: '6227001234567890', amount: 15000, purpose: '货款' });
+  transferHistory.push({ id: 'TX20260624', time: '2026-06-24 09:15', payeeName: '北京商贸公司', payeeAcc: '6228009876543210', amount: 28500, purpose: '服务费' });
+  loanApplications.push({ id: 'LOAN20260601', product: '小微快贷', amount: 50, rate: 3.8, term: 12, repay: '等额本息', status: '已放款' });
+  paymentHistory.push({ time: '2026-06-20 10:00', type: '电费', unit: '南康供电公司', amount: 3200.50 });
+  financeHoldings.push({ name: '乾元-日鑫月溢', amount: 50000, rate: 4.0, due: '2026-09-20' });
+
+  // 工具函数
+  function updateBalanceDisplay() {
+    const el = document.getElementById('homeBalance');
+    if (el) el.textContent = balance.toFixed(2);
+    const metalVal = metalHoldings.reduce((sum, h) => sum + (metalPrices[h.type]?.sell || 0) * h.grams, 0);
+    const elMetal = document.getElementById('metalValue');
+    if (elMetal) elMetal.textContent = metalVal.toFixed(2);
+    const elLoan = document.getElementById('loanTotal');
+    if (elLoan) elLoan.textContent = loanApplications.filter(l => l.status === '已放款').reduce((s, l) => s + l.amount * 10000, 0).toFixed(2);
+  }
+
+  function renderHomeView() {
+    let html = `
+      <div class="page-title">📊 账户总览</div>
+      <div class="grid-4" style="margin-bottom:14px;">
+        <div class="card" style="text-align:center;"><div class="highlight-num" id="homeBalance">${balance.toFixed(2)}</div><div style="font-size:12px;">可用余额 (元)</div></div>
+        <div class="card" style="text-align:center;"><div class="highlight-num" style="color:#1B8C3C;">50,000.00</div><div style="font-size:12px;">理财市值 (元)</div></div>
+        <div class="card" style="text-align:center;"><div class="highlight-num" style="color:#C8960C;" id="metalValue">6,008.00</div><div style="font-size:12px;">贵金属市值 (元)</div></div>
+        <div class="card" style="text-align:center;"><div class="highlight-num" style="color:#0052A3;" id="loanTotal">500,000.00</div><div style="font-size:12px;">贷款总额 (元)</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div style="font-weight:600;">📋 账户信息</div>
+          <div>户名：${ACCOUNT.name}</div><div>账号：${ACCOUNT.number}</div><div>类型：对公结算账户</div><div>网点：建行南康支行</div>
+        </div>
+        <div class="card">
+          <div style="font-weight:600;">⚡ 快捷操作</div>
+          <button class="btn btn-sm" onclick="switchView('transfer')">🔁 转账</button>
+          <button class="btn btn-outline btn-sm" onclick="switchView('loan')">💰 贷款</button>
+          <button class="btn btn-outline btn-sm" onclick="switchView('payment')">💡 缴费</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-weight:600;">📌 最近交易</div>
+        <table><thead><tr><th>时间</th><th>对方</th><th>金额</th><th>摘要</th></tr></thead><tbody id="recentTxTable"></tbody></table>
+      </div>
+    `;
+    document.getElementById('contentPanel').innerHTML = html;
+    updateBalanceDisplay();
+    document.getElementById('recentTxTable').innerHTML = transferHistory.slice(-5).reverse().map(tx =>
+      `<tr><td>${tx.time}</td><td>${tx.payeeName}</td><td style="color:#D50000;">¥${tx.amount.toFixed(2)}</td><td>${tx.purpose}</td></tr>`
+    ).join('');
+  }
+
+  function renderTransferView() {
+    let html = `
+      <div class="page-title">💸 转账汇款</div>
+      <div class="tabs" id="transferTabs">
+        <div class="tab active" data-tab="quick">普通转账</div>
+        <div class="tab" data-tab="batch">批量转账</div>
+        <div class="tab" data-tab="history">转账记录</div>
+        <div class="tab" data-tab="payee">收款人管理</div>
+        <div class="tab" data-tab="templates">模板管理</div>
+      </div>
+      <div id="tab-quick">${getQuickTransferHTML()}</div>
+      <div id="tab-batch" style="display:none;">${getBatchTransferHTML()}</div>
+      <div id="tab-history" style="display:none;">${getHistoryHTML()}</div>
+      <div id="tab-payee" style="display:none;">${getPayeeHTML()}</div>
+      <div id="tab-templates" style="display:none;">${getTemplatesHTML()}</div>
+    `;
+    document.getElementById('contentPanel').innerHTML = html;
+    initTransferEvents();
+  }
+
+  function getQuickTransferHTML() {
+    return `
+      <div class="card">
+        <div class="grid-2">
+          <div class="form-group"><label>付款账号</label><input value="${ACCOUNT.number}" readonly></div>
+          <div class="form-group"><label>付款户名</label><input value="${ACCOUNT.name}" readonly></div>
+          <div class="form-group"><label>收款户名</label><input id="qPayeeName"></div>
+          <div class="form-group"><label>收款账号</label><input id="qPayeeAcc"></div>
+          <div class="form-group"><label>收款银行</label><select id="qPayeeBank"><option>工商银行</option><option>农业银行</option><option>中国银行</option><option>建设银行</option><option>其他</option></select></div>
+          <div class="form-group"><label>开户网点</label><input id="qBranch"></div>
+          <div class="form-group"><label>金额</label><input id="qAmount" placeholder="0.00"></div>
+          <div class="form-group"><label>用途</label><select id="qPurpose"><option>货款</option><option>服务费</option><option>工程款</option></select></div>
+        </div>
+        <button class="btn btn-primary" id="submitQuick">确认转账</button>
+        <span id="quickMsg" style="margin-left:12px; color:#D50000;"></span>
+      </div>
+    `;
+  }
+
+  function getBatchTransferHTML() {
+    return `
+      <div class="card">
+        <div id="batchList">${batchRows.map((r,i)=>`
+          <div class="grid-2" style="margin-bottom:8px; border-bottom:1px dashed #ddd; padding-bottom:8px;">
+            <div class="form-group"><label>户名</label><input value="${r.name}" onchange="batchRows[${i}].name=this.value"></div>
+            <div class="form-group"><label>账号</label><input value="${r.acc}" onchange="batchRows[${i}].acc=this.value"></div>
+            <div class="form-group"><label>银行</label><input value="${r.bank}" onchange="batchRows[${i}].bank=this.value"></div>
+            <div class="form-group"><label>金额</label><input type="number" value="${r.amount}" onchange="batchRows[${i}].amount=+this.value"></div>
+            <button class="btn btn-sm btn-danger" onclick="batchRows.splice(${i},1); renderBatchRows()">删除</button>
+          </div>
+        `).join('')}</div>
+        <button class="btn btn-outline btn-sm" id="addBatchRow">+ 添加一笔</button>
+        <button class="btn btn-primary btn-sm" id="submitBatch">批量提交</button>
+      </div>
+    `;
+  }
+
+  function getHistoryHTML() {
+    return `
+      <div class="card">
+        <table><thead><tr><th>流水号</th><th>时间</th><th>收款方</th><th>金额</th></tr></thead>
+        <tbody>${transferHistory.slice().reverse().map(tx => `<tr><td>${tx.id}</td><td>${tx.time}</td><td>${tx.payeeName}</td><td>¥${tx.amount.toFixed(2)}</td></tr>`).join('')}</tbody></table>
+      </div>
+    `;
+  }
+
+  function getPayeeHTML() {
+    return `
+      <div class="card">
+        <div class="grid-2">
+          <div class="form-group"><label>户名</label><input id="pName"></div>
+          <div class="form-group"><label>账号</label><input id="pAcc"></div>
+          <div class="form-group"><label>银行</label><input id="pBank"></div>
+          <div class="form-group"><label>网点</label><input id="pBranch"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="addPayee">添加</button>
+        <table style="margin-top:10px;"><thead><tr><th>户名</th><th>账号</th><th>银行</th><th>操作</th></tr></thead>
+        <tbody>${payeeList.map((p,i)=>`<tr><td>${p.name}</td><td>${p.acc}</td><td>${p.bank}</td><td><button class="btn btn-sm btn-outline" onclick="deletePayee(${i})">删除</button></td></tr>`).join('')}</tbody></table>
+      </div>
+    `;
+  }
+
+  function getTemplatesHTML() {
+    return `
+      <div class="card">
+        <div class="grid-2">
+          <div class="form-group"><label>模板名称</label><input id="tplName"></div>
+          <div class="form-group"><label>收款户名</label><input id="tplPayee"></div>
+          <div class="form-group"><label>收款账号</label><input id="tplAcc"></div>
+          <div class="form-group"><label>收款银行</label><input id="tplBank"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="saveTemplate">保存模板</button>
+        <table style="margin-top:10px;"><thead><tr><th>名称</th><th>收款方</th><th>账号</th><th>操作</th></tr></thead>
+        <tbody>${templates.map((t,i)=>`<tr><td>${t.name}</td><td>${t.payee}</td><td>${t.acc}</td><td><button class="btn btn-sm btn-outline" onclick="useTemplate(${i})">使用</button></td></tr>`).join('')}</tbody></table>
+      </div>
+    `;
+  }
+
+  function initTransferEvents() {
+    // 标签切换
+    document.getElementById('transferTabs').addEventListener('click', e => {
+      if (e.target.classList.contains('tab')) {
+        document.querySelectorAll('#transferTabs .tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        const tabId = 'tab-' + e.target.dataset.tab;
+        document.querySelectorAll('#transferTabs + div > div').forEach(div => div.style.display = 'none');
+        document.getElementById(tabId).style.display = 'block';
+      }
+    });
+
+    // 普通转账
+    document.getElementById('submitQuick')?.addEventListener('click', () => {
+      const name = document.getElementById('qPayeeName').value.trim();
+      const acc = document.getElementById('qPayeeAcc').value.trim();
+      const amt = parseFloat(document.getElementById('qAmount').value);
+      if (!name || !acc || isNaN(amt) || amt <= 0 || amt > balance) {
+        document.getElementById('quickMsg').textContent = '信息不完整或余额不足';
+        return;
+      }
+      if (!confirm(`确认向 ${name} 转账 ¥${amt.toFixed(2)}？`)) return;
+      balance -= amt;
+      const tx = { id: 'TX' + Date.now(), time: new Date().toLocaleString(), payeeName: name, payeeAcc: acc, amount: amt, purpose: document.getElementById('qPurpose').value };
+      transferHistory.push(tx);
+      currentTransferData = tx;
+      updateBalanceDisplay();
+      document.getElementById('quickMsg').textContent = '转账成功！';
+    });
+
+    // 批量转账
+    document.getElementById('addBatchRow')?.addEventListener('click', () => {
+      batchRows.push({ name: '', acc: '', bank: '', amount: 0 });
+      renderBatchRows();
+    });
+    document.getElementById('submitBatch')?.addEventListener('click', () => {
+      let total = 0;
+      for (let r of batchRows) { if (!r.name || !r.acc || !r.bank || r.amount <= 0) { alert('请完善信息'); return; } total += r.amount; }
+      if (total > balance) { alert('余额不足'); return; }
+      if (!confirm(`批量转账 ${batchRows.length} 笔，合计 ¥${total.toFixed(2)}，确认？`)) return;
+      balance -= total;
+      batchRows.forEach(r => transferHistory.push({ id: 'BAT' + Date.now(), time: new Date().toLocaleString(), payeeName: r.name, payeeAcc: r.acc, amount: r.amount, purpose: '批量转账' }));
+      batchRows = [{ name: '', acc: '', bank: '', amount: 0 }];
+      renderBatchRows();
+      updateBalanceDisplay();
+      alert('批量转账已提交');
+    });
+
+    // 收款人管理
+    document.getElementById('addPayee')?.addEventListener('click', () => {
+      const name = document.getElementById('pName').value.trim();
+      const acc = document.getElementById('pAcc').value.trim();
+      const bank = document.getElementById('pBank').value.trim();
+      if (!name || !acc || !bank) return;
+      payeeList.push({ name, acc, bank, branch: document.getElementById('pBranch').value });
+      renderPayeeTable();
+    });
+
+    // 模板管理
+    document.getElementById('saveTemplate')?.addEventListener('click', () => {
+      const name = document.getElementById('tplName').value.trim();
+      const payee = document.getElementById('tplPayee').value.trim();
+      const acc = document.getElementById('tplAcc').value.trim();
+      const bank = document.getElementById('tplBank').value.trim();
+      if (!name || !payee || !acc || !bank) return;
+      templates.push({ name, payee, acc, bank });
+      renderTemplatesTable();
+    });
+  }
+
+  window.deletePayee = (i) => { payeeList.splice(i,1); renderPayeeTable(); };
+  window.useTemplate = (i) => { const t = templates[i]; document.getElementById('qPayeeName').value = t.payee; document.getElementById('qPayeeAcc').value = t.acc; document.querySelector('#transferTabs .tab[data-tab="quick"]').click(); };
+  function renderBatchRows() {
+    const container = document.getElementById('batchList');
+    if (container) container.innerHTML = batchRows.map((r,i) => `
+      <div class="grid-2" style="margin-bottom:8px; border-bottom:1px dashed #ddd; padding-bottom:8px;">
+        <div class="form-group"><label>户名</label><input value="${r.name}" onchange="batchRows[${i}].name=this.value"></div>
+        <div class="form-group"><label>账号</label><input value="${r.acc}" onchange="batchRows[${i}].acc=this.value"></div>
+        <div class="form-group"><label>银行</label><input value="${r.bank}" onchange="batchRows[${i}].bank=this.value"></div>
+        <div class="form-group"><label>金额</label><input type="number" value="${r.amount}" onchange="batchRows[${i}].amount=+this.value"></div>
+        <button class="btn btn-sm btn-danger" onclick="batchRows.splice(${i},1); renderBatchRows()">删除</button>
+      </div>
+    `).join('');
+  }
+  function renderPayeeTable() {
+    const tbody = document.querySelector('#tab-payee tbody');
+    if (tbody) tbody.innerHTML = payeeList.map((p,i) => `<tr><td>${p.name}</td><td>${p.acc}</td><td>${p.bank}</td><td><button class="btn btn-sm btn-outline" onclick="deletePayee(${i})">删除</button></td></tr>`).join('');
+  }
+  function renderTemplatesTable() {
+    const tbody = document.querySelector('#tab-templates tbody');
+    if (tbody) tbody.innerHTML = templates.map((t,i) => `<tr><td>${t.name}</td><td>${t.payee}</td><td>${t.acc}</td><td><button class="btn btn-sm btn-outline" onclick="useTemplate(${i})">使用</button></td></tr>`).join('');
+  }
+
+  // 电子回单
+  function renderVoucherView() {
+    let html = `
+      <div class="page-title">📄 电子回单</div>
+      <div class="card">
+        <input id="voucherTid" placeholder="输入流水号" style="width:260px;">
+        <button class="btn btn-primary btn-sm" id="searchVoucher">查询</button>
+        <div id="voucherCanvasWrap" style="display:none; margin-top:12px;">
+          <canvas id="voucherCanvas" width="700" height="400" style="border:1px solid #ddd;"></canvas>
+          <button class="btn btn-outline btn-sm" id="downloadVoucher">下载回单</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('contentPanel').innerHTML = html;
+    document.getElementById('searchVoucher').addEventListener('click', () => {
+      const tid = document.getElementById('voucherTid').value.trim();
+      const tx = transferHistory.find(t => t.id === tid) || currentTransferData;
+      if (!tx) { alert('未找到'); return; }
+      const canvas = document.getElementById('voucherCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.strokeStyle='#0052A3'; ctx.lineWidth=3; ctx.strokeRect(10,10,canvas.width-20,canvas.height-20);
+      ctx.font='bold 20px "Microsoft YaHei"'; ctx.fillStyle='#0052A3'; ctx.textAlign='center';
+      ctx.fillText('中国建设银行 电子转账回单', canvas.width/2, 48);
+      ctx.font='14px "Microsoft YaHei"'; ctx.fillStyle='#000'; ctx.textAlign='left';
+      let y=80;
+      ctx.fillText('流水号：'+tx.id,30,y); y+=22;
+      ctx.fillText('时间：'+tx.time,30,y); y+=22;
+      ctx.fillText('付款方：'+ACCOUNT.name,30,y); y+=22;
+      ctx.fillText('收款方：'+tx.payeeName,30,y); y+=22;
+      ctx.fillText('金额：¥'+tx.amount.toFixed(2),30,y);
+      document.getElementById('voucherCanvasWrap').style.display='block';
+    });
+    document.getElementById('downloadVoucher')?.addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = '建行电子回单.png';
+      link.href = document.getElementById('voucherCanvas').toDataURL();
+      link.click();
+    });
+  }
+
+  // 贷款服务
+  function renderLoanView() {
+    let html = `
+      <div class="page-title">🏦 贷款服务</div>
+      <div class="tabs" id="loanTabs">
+        <div class="tab active" data-tab="products">贷款产品</div>
+        <div class="tab" data-tab="apply">在线申请</div>
+        <div class="tab" data-tab="calculator">还款试算</div>
+        <div class="tab" data-tab="myloan">我的贷款</div>
+      </div>
+      <div id="tab-products">
+        <div class="card"><b>小微快贷</b> 额度300万 年利率3.8% <button class="btn btn-primary btn-sm" onclick="switchLoanTab('apply')">申请</button></div>
+        <div class="card"><b>科技企业贷</b> 额度500万 年利率3.5% <button class="btn btn-primary btn-sm" onclick="switchLoanTab('apply')">申请</button></div>
+      </div>
+      <div id="tab-apply" style="display:none;">
+        <div class="card">
+          <div class="grid-2">
+            <div class="form-group"><label>产品</label><select id="loanProduct"><option>小微快贷</option><option>科技企业贷</option></select></div>
+            <div class="form-group"><label>金额(万元)</label><input id="loanAmt" type="number"></div>
+            <div class="form-group"><label>期限(月)</label><select id="loanTerm"><option>12</option><option>24</option><option>36</option></select></div>
+            <div class="form-group"><label>还款方式</label><select id="loanRepay"><option>等额本息</option><option>先息后本</option></select></div>
+          </div>
+          <button class="btn btn-primary" id="submitLoan">提交申请</button>
+        </div>
+      </div>
+      <div id="tab-calculator" style="display:none;">
+        <div class="card">
+          <div class="grid-2">
+            <div class="form-group"><label>金额(万元)</label><input id="calcAmt" type="number" value="100"></div>
+            <div class="form-group"><label>年利率(%)</label><input id="calcRate" type="number" value="3.8"></div>
+            <div class="form-group"><label>期限(月)</label><input id="calcTerm" type="number" value="12"></div>
+            <div class="form-group"><label>还款方式</label><select id="calcRepay"><option>等额本息</option><option>先息后本</option></select></div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="doCalc">计算</button>
+          <div id="calcResult" style="margin-top:12px; line-height:2;"></div>
+        </div>
+      </div>
+      <div id="tab-myloan" style="display:none;">
+        <div class="card">
+          <table><thead><tr><th>合同号</th><th>产品</th><th>金额(万)</th><th>利率</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>${loanApplications.map((l,i)=>`<tr><td>${l.id}</td><td>${l.product}</td><td>${l.amount}</td><td>${l.rate}%</td><td>${l.status}</td><td>${l.status==='待放款'?`<button class="btn btn-sm btn-primary" onclick="confirmLoan(${i})">确认放款</button>`:'-'}</td></tr>`).join('')}</tbody></table>
+        </div>
+      </div>
+    `;
+    document.getElementById('contentPanel').innerHTML = html;
+    initLoanEvents();
+  }
+
+  function initLoanEvents() {
+    document.getElementById('loanTabs').addEventListener('click', e => {
+      if (e.target.classList.contains('tab')) {
+        document.querySelectorAll('#loanTabs .tab').forEach(t => t.classList.remove('active'));
+        e.target.classList.add('active');
+        document.querySelectorAll('#loanTabs + div > div').forEach(div => div.style.display = 'none');
+        document.getElementById('tab-' + e.target.dataset.tab).style.display = 'block';
+      }
+    });
+    window.switchLoanTab = (tab) => document.querySelector(`#loanTabs .tab[data-tab="${tab}"]`).click();
+
+    document.getElementById('submitLoan')?.addEventListener('click', () => {
+      const product = document.getElementById('loanProduct').value;
+      const amount = parseFloat(document.getElementById('loanAmt').value);
+      const term = parseInt(document.getElementById('loanTerm').value);
+      const repay = document.getElementById('loanRepay').value;
+      if (!amount) return;
+      const rates = { '小微快贷': 3.8, '科技企业贷': 3.5 };
+      loanApplications.push({ id: 'LOAN' + Date.now(), product, amount, rate: rates[product], term, repay, status: '待放款' });
+      alert('申请已提交');
+      document.getElementById('loanAmt').value = '';
+    });
+
+    document.getElementById('doCalc')?.addEventListener('click', () => {
+      const P = parseFloat(document.getElementById('calcAmt').value) * 10000;
+      const r = parseFloat(document.getElementById('calcRate').value) / 100 / 12;
+      const n = parseInt(document.getElementById('calcTerm').value);
+      const repay = document.getElementById('calcRepay').value;
+      if (isNaN(P) || isNaN(r) || isNaN(n)) return;
+      let result = '';
+      if (repay === '等额本息') {
+        const monthly = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+        result = `月供：¥${monthly.toFixed(2)}，总利息：¥${(monthly*n - P).toFixed(2)}`;
+      } else {
+        const monthlyInt = P * r;
+        result = `每月还息：¥${monthlyInt.toFixed(2)}，最后还本：¥${P.toFixed(2)}，总利息：¥${(monthlyInt*n).toFixed(2)}`;
+      }
+      document.getElementById('calcResult').innerHTML = result;
+    });
+
+    window.confirmLoan = (i) => {
+      const loan = loanApplications[i];
+      if (loan.status === '待放款') {
+        balance += loan.amount * 10000;
+        loan.status = '已放款';
+        updateBalanceDisplay();
+        alert('贷款已放款，余额已增加');
+      }
+    };
+  }
+
+  // 其他视图
+  function renderFinanceView() {
+    document.getElementById('contentPanel').innerHTML = `
+      <div class="page-title">📈 投资理财</div>
+      <div class="card"><b>乾元-日鑫月溢</b> 年化3.5%-4.2% <button class="btn btn-primary btn-sm" onclick="buyFinance('乾元-日鑫月溢',4.0)">购买</button></div>
+      <div class="card"><b>建信理财-惠众</b> 年化4.0%-4.8% <button class="btn btn-primary btn-sm" onclick="buyFinance('建信理财-惠众',4.5)">购买</button></div>
+      <div class="card"><h4>持仓</h4><table><thead><tr><th>产品</th><th>金额</th><th>年化</th></tr></thead><tbody>${financeHoldings.map(f=>`<tr><td>${f.name}</td><td>${f.amount}</td><td>${f.rate}%</td></tr>`).join('')}</tbody></table></div>
+    `;
+    window.buyFinance = (name, rate) => {
+      const amt = prompt(`购买 ${name}，金额(元)：`, '50000');
+      if (!amt || isNaN(parseFloat(amt)) || parseFloat(amt) <= 0 || parseFloat(amt) > balance) { alert('金额不正确或余额不足'); return; }
+      balance -= parseFloat(amt);
+      financeHoldings.push({ name, amount: parseFloat(amt), rate, due: new Date(new Date().setDate(new Date().getDate()+90)).toLocaleDateString() });
+      updateBalanceDisplay();
+      alert('购买成功');
+    };
+  }
+
+  function renderPreciousView() {
+    document.getElementById('contentPanel').innerHTML = `
+      <div class="page-title">🥇 贵金属外汇</div>
+      <div class="card"><b>实时行情</b><table><thead><tr><th>品种</th><th>卖出价</th><th>买入价</th><th>操作</th></tr></thead><tbody id="metalBody"></tbody></table></div>
+      <div class="card"><b>持仓</b><table><thead><tr><th>品种</th><th>克数</th><th>成本</th><th>现价</th><th>盈亏</th></tr></thead><tbody id="holdingBody"></tbody></table></div>
+      <div class="card"><b>交易</b>
+        <select id="metalType"><option>黄金</option><option>白银</option></select>
+        <input id="metalQty" type="number" value="10" min="1" style="width:80px;">
+        <button class="btn btn-gold btn-sm" id="buyMetal">买入</button>
+        <button class="btn btn-danger btn-sm" id="sellMetal">卖出</button>
+      </div>
+    `;
+    const renderMetal = () => {
+      document.getElementById('metalBody').innerHTML = Object.entries(metalPrices).map(([k,v])=>`<tr><td>${k}</td><td>${v.sell.toFixed(2)}</td><td>${v.buy.toFixed(2)}</td><td><button class="btn btn-sm btn-gold" onclick="quickBuy('${k}')">买入</button></td></tr>`).join('');
+      document.getElementById('holdingBody').innerHTML = metalHoldings.map((h,i)=>{
+        const price = metalPrices[h.type]?.sell || 0;
+        const pl = (price - h.cost) * h.grams;
+        return `<tr><td>${h.type}</td><td>${h.grams}</td><td>${h.cost.toFixed(2)}</td><td>${price.toFixed(2)}</td><td style="color:${pl>=0?'red':'green'}">${pl.toFixed(2)}</td></tr>`;
+      }).join('');
+    };
+    renderMetal();
+    document.getElementById('buyMetal').addEventListener('click', () => {
+      const type = document.getElementById('metalType').value;
+      const qty = parseInt(document.getElementById('metalQty').value) || 0;
+      const price = metalPrices[type]?.sell || 0;
+      if (price*qty > balance) { alert('余额不足'); return; }
+      balance -= price*qty;
+      const exist = metalHoldings.find(h=>h.type===type);
+      if (exist) { exist.cost = (exist.cost*exist.grams + price*qty)/(exist.grams+qty); exist.grams += qty; }
+      else metalHoldings.push({type, grams:qty, cost:price});
+      updateBalanceDisplay(); renderMetal();
+    });
+    document.getElementById('sellMetal').addEventListener('click', () => {
+      const type = document.getElementById('metalType').value;
+      const qty = parseInt(document.getElementById('metalQty').value) || 0;
+      const hold = metalHoldings.find(h=>h.type===type);
+      if (!hold || hold.grams < qty) { alert('持仓不足'); return; }
+      balance += (metalPrices[type]?.buy || 0) * qty;
+      hold.grams -= qty;
+      if (hold.grams <= 0) metalHoldings = metalHoldings.filter(h=>h.type!==type);
+      updateBalanceDisplay(); renderMetal();
+    });
+    window.quickBuy = (type) => { document.getElementById('metalType').value = type; };
+  }
+
+  function renderPaymentView() {
+    document.getElementById('contentPanel').innerHTML = `
+      <div class="page-title">💡 生活缴费</div>
+      <div class="grid-3" style="margin-bottom:12px;">
+        <div class="card" style="text-align:center; cursor:pointer;" onclick="showPayment('水费')">💧<br>水费</div>
+        <div class="card" style="text-align:center; cursor:pointer;" onclick="showPayment('电费')">⚡<br>电费</div>
+        <div class="card" style="text-align:center; cursor:pointer;" onclick="showPayment('燃气费')">🔥<br>燃气费</div>
+      </div>
+      <div id="payForm" style="display:none;" class="card">
+        <h4 id="payTitle">缴费</h4>
+        <div class="form-group"><label>单位</label><input id="payUnit"></div>
+        <div class="form-group"><label>金额</label><input id="payAmt" type="number"></div>
+        <button class="btn btn-primary btn-sm" id="submitPay">确认缴费</button>
+      </div>
+      <div class="card"><h4>缴费记录</h4><table><thead><tr><th>时间</th><th>类型</th><th>单位</th><th>金额</th></tr></thead><tbody id="payHistoryBody"></tbody></table></div>
+    `;
+    const renderPayHistory = () => {
+      document.getElementById('payHistoryBody').innerHTML = paymentHistory.map(p=>`<tr><td>${p.time}</td><td>${p.type}</td><td>${p.unit}</td><td>¥${p.amount.toFixed(2)}</td></tr>`).join('');
+    };
+    renderPayHistory();
+    window.showPayment = (type) => {
+      document.getElementById('payForm').style.display = 'block';
+      document.getElementById('payTitle').textContent = type;
+      document.getElementById('payForm').dataset.type = type;
+    };
+    document.getElementById('submitPay').addEventListener('click', () => {
+      const type = document.getElementById('payForm').dataset.type;
+      const unit = document.getElementById('payUnit').value.trim();
+      const amt = parseFloat(document.getElementById('payAmt').value);
+      if (!unit || isNaN(amt) || amt <= 0 || amt > balance) { alert('信息有误或余额不足'); return; }
+      balance -= amt;
+      paymentHistory.push({ time: new Date().toLocaleString(), type, unit, amount: amt });
+      updateBalanceDisplay();
+      renderPayHistory();
+      alert('缴费成功');
+    });
+  }
+
+  function renderCommunityView() {
+    document.getElementById('contentPanel').innerHTML = `
+      <div class="page-title">👥 企业社区</div>
+      <div class="card"><input id="postTitle" placeholder="帖子标题" style="width:70%;"><button class="btn btn-primary btn-sm" id="addPost">发布</button><div id="postList" style="margin-top:10px;"></div></div>
+    `;
+    document.getElementById('addPost').addEventListener('click', () => {
+      const title = document.getElementById('postTitle').value.trim();
+      if (!title) return;
+      const div = document.createElement('div'); div.className='card'; div.innerHTML = `<b>${title}</b><br><small>${new Date().toLocaleDateString()}</small>`;
+      document.getElementById('postList').prepend(div);
+      document.getElementById('postTitle').value = '';
+    });
+  }
+
+  function renderAdsView() {
+    document.getElementById('contentPanel').innerHTML = `
+      <div class="page-title">📢 优惠推荐</div>
+      <div class="ad-banner"><span style="font-size:30px;">💳</span><div><b>企业信用卡</b><br>56天免息</div></div>
+      <div class="ad-banner"><span style="font-size:30px;">📊</span><div><b>乾元理财</b><br>年化3.5%起</div></div>
+    `;
+  }
+
+  // 全局切换
+  window.switchView = function(viewName) {
+    document.querySelectorAll('#sidebar .menu-item').forEach(i => i.classList.remove('active'));
+    document.querySelector(`#sidebar .menu-item[data-view="${viewName}"]`).classList.add('active');
+    switch(viewName) {
+      case 'home': renderHomeView(); break;
+      case 'transfer': renderTransferView(); break;
+      case 'voucher': renderVoucherView(); break;
+      case 'loan': renderLoanView(); break;
+      case 'finance': renderFinanceView(); break;
+      case 'precious': renderPreciousView(); break;
+      case 'payment': renderPaymentView(); break;
+      case 'community': renderCommunityView(); break;
+      case 'ads': renderAdsView(); break;
+    }
+  };
+
+  function initApp() {
+    document.getElementById('sidebar').addEventListener('click', e => {
+      const item = e.target.closest('.menu-item');
+      if (item) switchView(item.dataset.view);
+    });
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      loginPage.style.display = 'flex';
+      mainPage.style.display = 'none';
+    });
+    switchView('home');
+  }
+})();
+</script>
+</body>
+</html>
